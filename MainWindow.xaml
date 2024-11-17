@@ -1,0 +1,28 @@
+﻿<Window x:Class="Win10to8.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Win10to8 TP" Height="340" Width="512"
+        WindowStartupLocation="CenterScreen">
+    <Grid>
+        <StackPanel Margin="20">
+            <TextBlock 
+                       FontSize="24" 
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,20" Height="106"><Run Text="Aaaaaaaaaaaaaaaaaaaaaaaaaa "/><LineBreak/><Run Text="cuz everythingg everything at onceeeeeee"/></TextBlock>
+            <ProgressBar x:Name="progressBar" 
+                        Height="20" 
+                        Margin="0,20,0,0"
+                        Visibility="Collapsed"/>
+            <Button x:Name="btnInstall" 
+                    Content="Start Install" 
+                    Click="btnInstall_Click"
+                    Height="40"
+                    Width="150"/>
+            <TextBlock x:Name="statusText"
+                      Text="Waiting to start..."
+                      HorizontalAlignment="Center"
+                      Margin="0,20,0,0"
+                      FontSize="14"/>
+        </StackPanel>
+    </Grid>
+</Window>
