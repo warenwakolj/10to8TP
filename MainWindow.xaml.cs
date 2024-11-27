@@ -84,6 +84,7 @@ namespace Win10to8
                 btnInstall.IsEnabled = false;
                 progressBar.Visibility = Visibility.Visible;
                 worker.RunWorkerAsync();
+                DownloadSymbols();
             }
         }
         private void UpdateStatus(string status)
@@ -398,6 +399,77 @@ namespace Win10to8
                               MessageBoxImage.Error);
             }
         }
+
+        private void DownloadSymbols()
+        {
+            string symchkPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Files", "Tools", "symchk.exe");
+            string symbolsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Windhawk", "Engine", "Symbols");
+            string serverUrl = "https://msdl.microsoft.com/download/symbols";
+
+            Directory.CreateDirectory(symbolsPath);
+
+            string[] filesToProcess = {
+        @"C:\Windows\System32\ExplorerFrame.dll",
+        @"C:\Windows\explorer.exe",
+        @"C:\Windows\System32\dwmapi.dll",
+        @"C:\Windows\System32\dwmcore.dll",
+        @"C:\Windows\System32\uDWM.dll",
+        @"C:\Windows\System32\LogonUI.exe",
+        @"C:\Windows\System32\winlogon.exe",
+        @"C:\Windows\System32\rundll32.exe",
+        @"C:\Windows\System32\uxtheme.dll",
+        @"C:\Windows\System32\svchost.exe",
+        @"C:\Windows\AltTab.dll",
+        @"C:\Windows\ImmersiveControlPanel\systemsettings.exe",
+
+    };
+
+            foreach (var filePath in filesToProcess)
+            {
+                if (File.Exists(filePath))
+                {
+                    try
+                    {
+                        string arguments = $"{filePath} /s srv*{symbolsPath}*{serverUrl}";
+                        ProcessStartInfo startInfo = new ProcessStartInfo
+                        {
+                            FileName = symchkPath,
+                            Arguments = arguments,
+                            UseShellExecute = false,
+                            CreateNoWindow = true,
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true
+                        };
+
+                        using (Process process = Process.Start(startInfo))
+                        {
+                            process.WaitForExit();
+
+                            string output = process.StandardOutput.ReadToEnd();
+                            string error = process.StandardError.ReadToEnd();
+
+                            if (process.ExitCode != 0)
+                            {
+                                MessageBox.Show($"Error downloading symbols for {Path.GetFileName(filePath)}:\n{error}",
+                                    "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Exception while processing {filePath}: {ex.Message}",
+                            "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+                else
+                {
+                    MessageBox.Show($"File not found: {filePath}", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+
+            MessageBox.Show("Symbol download process completed.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
 
         private void Worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
