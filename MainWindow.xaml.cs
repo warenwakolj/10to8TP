@@ -4,6 +4,7 @@ using System.IO;
 using System.Windows;
 using System.ComponentModel;
 using Microsoft.Win32.TaskScheduler;
+using System.Security.Policy;
 
 namespace Win10to8
 {
@@ -125,6 +126,13 @@ namespace Win10to8
                     MessageBox.Show("Themes folder not found in Files directory!", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
 
+                UpdateStatus("Installing Windhawk...");
+                string installersPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Files", "Installers");
+                RunInstaller(
+                    Path.Combine(installersPath, "windhawk_setup_offline.exe"),
+                    "/S /D C:/10to8/Windhawk"
+                );
+
                 UpdateStatus("Copying Windhawk files...");
                 string windhawkSourcePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Files", "Windhawk");
                 string windhawkDestPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Windhawk");
@@ -138,18 +146,22 @@ namespace Win10to8
                     MessageBox.Show("Windhawk folder not found in Files directory!", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
 
+                UpdateStatus("Downloading symbols");
+                DownloadSymbols("C:\\Windows\\System32\\ExplorerFrame.dll");
+                DownloadSymbols("C:\\Windows\\explorer.exe");
+                DownloadSymbols("C:\\Windows\\System32\\dwmapi.dll");
+                DownloadSymbols("C:\\Windows\\System32\\dwmcore.dll");
+                DownloadSymbols("C:\\Windows\\System32\\uDWM.dll");
+                DownloadSymbols("C:\\Windows\\System32\\winlogon.exe");
+                DownloadSymbols("C:\\Windows\\System32\\uxtheme.dll");
+                DownloadSymbols("C:\\Windows\\AltTab.dll");
+
                 UpdateStatus("Installing StartIsBack++...");
-                string installersPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Files", "Installers");
                 RunInstaller(
                     Path.Combine(installersPath, "StartIsBackPlusPlus_setup.exe"),
                     "/elevated /silent"
                 );
 
-                UpdateStatus("Installing Windhawk...");
-                RunInstaller(
-                    Path.Combine(installersPath, "windhawk_setup_offline.exe"),
-                    "/S /nostart"
-                );
 
                 UpdateStatus("Registering DLL...");
                 RegisterDll();
@@ -362,6 +374,19 @@ namespace Win10to8
             }
         }
 
+        /// this is my first cs function, don't kill me with hammers
+        private void DownloadSymbols(string target)
+        {
+            ProcessStartInfo startInfo = new ProcessStartInfo
+            {
+                FileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Files", "Tools", "pdblister.exe"),
+                Arguments = "download_single SRV*C:\\ProgramData\\Windhawk\\Engine\\Symbols*https://msdl.microsoft.com/download/symbols target",
+                UseShellExecute = true,
+                Verb = "runas",
+                CreateNoWindow = true
+            };
+        }
+        
         private void RunInstaller(string path, string arguments)
         {
             if (!File.Exists(path))
